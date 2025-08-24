@@ -1,12 +1,20 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsNumber, IsOptional, IsString, Length, Min } from 'class-validator';
 
 export class UpdateItemDto {
+  @ApiProperty({
+    example: 'Pencil',
+    minLength: 1,
+    maxLength: 50,
+    required: false,
+  })
   @IsOptional()
   @IsString()
   @Length(1, 50)
   name: string;
 
+  @ApiProperty({ example: 1.99, minimum: 0, required: false })
   @Type(() => Number)
   @IsOptional()
   @IsNumber()
