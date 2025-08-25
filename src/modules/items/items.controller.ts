@@ -12,7 +12,6 @@ import {
 } from '@nestjs/common';
 import { ItemsService } from './items.service';
 import { CreateItemDto } from './dto/create-item.dto';
-import { Item } from './item.entity';
 import { UpdateItemDto } from './dto/update-item.dto';
 import {
   ApiBadRequestResponse,
@@ -23,6 +22,7 @@ import {
   ApiParam,
   ApiTags,
 } from '@nestjs/swagger';
+import { ItemEntity } from './item.schema';
 
 @ApiTags('items')
 @Controller('items')
@@ -33,10 +33,10 @@ export class ItemsController {
   @ApiOperation({ summary: 'Get all items' })
   @ApiOkResponse({
     description: 'List of items',
-    type: Array<Item>,
+    type: Array<ItemEntity>,
     isArray: true,
   })
-  findAll(): Item[] {
+  findAll(): Promise<ItemEntity[]> {
     return this.itemsService.findAll();
   }
 
@@ -48,17 +48,17 @@ export class ItemsController {
     type: 'string',
     format: 'uuid',
   })
-  @ApiOkResponse({ description: 'The found item', type: Item })
+  @ApiOkResponse({ description: 'The found item', type: ItemEntity })
   @ApiNotFoundResponse({ description: 'Item not found' })
-  findOne(@Param('id', new ParseUUIDPipe()) id: string): Item {
+  findOne(@Param('id', new ParseUUIDPipe()) id: string): Promise<ItemEntity> {
     return this.itemsService.findOne(id);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create a new item' })
-  @ApiCreatedResponse({ description: 'The created item', type: Item })
+  @ApiCreatedResponse({ description: 'The created item', type: ItemEntity })
   @ApiBadRequestResponse({ description: 'Validation failed' })
-  create(@Body() dto: CreateItemDto): Item {
+  create(@Body() dto: CreateItemDto): Promise<ItemEntity> {
     return this.itemsService.create(dto);
   }
 
@@ -70,7 +70,7 @@ export class ItemsController {
     type: 'string',
     format: 'uuid',
   })
-  @ApiOkResponse({ description: 'The updated item', type: Item })
+  @ApiOkResponse({ description: 'The updated item', type: ItemEntity })
   @ApiNotFoundResponse({ description: 'Item not found' })
   @ApiBadRequestResponse({
     description: 'Validation failed or nothing to update',
@@ -78,7 +78,7 @@ export class ItemsController {
   update(
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateItemDto,
-  ): Item {
+  ): Promise<ItemEntity> {
     if (Object.keys(dto).length === 0) {
       throw new BadRequestException('Nothing to update');
     }
@@ -97,7 +97,7 @@ export class ItemsController {
   })
   @ApiOkResponse({ description: 'Item deleted successfully' })
   @ApiNotFoundResponse({ description: 'Item not found' })
-  remove(@Param('id', new ParseUUIDPipe()) id: string): void {
-    this.itemsService.remove(id);
+  remove(@Param('id', new ParseUUIDPipe()) id: string): Promise<void> {
+    return this.itemsService.remove(id);
   }
 }

@@ -4,28 +4,19 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { Item } from './item.entity';
 import { CreateItemDto } from './dto/create-item.dto';
 import { randomUUID } from 'crypto';
 import { UpdateItemDto } from './dto/update-item.dto';
 import { faker } from '@faker-js/faker';
+import { InjectModel } from '@nestjs/mongoose';
+import { ItemEntity } from './item.schema';
+import { Model } from 'mongoose';
 
 @Injectable()
 export class ItemsService {
-  private items: Item[] = [];
   private readonly logger = new Logger(ItemsService.name);
 
-  constructor() {
-    if (this.items.length === 0) {
-      for (let i = 0; i < 10; i++) {
-        this.items.push(this.mockItem());
-      }
-
-      this.logger.log(`Initialized with ${this.items.length} mock items`);
-    }
-  }
-
-  private mockItem(): Item {
+  private mockItem(): ItemEntity {
     return {
       id: faker.string.uuid(),
       name: faker.commerce.productName(),
@@ -33,16 +24,37 @@ export class ItemsService {
     };
   }
 
-  findAll(): Item[] {
-    this.logger.log(`findAll: count=${this.items.length}`);
-
-    return this.items;
+  constructor(
+    @InjectModel(ItemEntity.name) private itemModel: Model<ItemEntity>,
+  ) {
+    // Initialization logic that requires async should be moved elsewhere
+    this.logger.log('constructor: initializing items service');
+    void this.initialize();
   }
 
-  findOne(id: string): Item {
-    this.logger.log(`findOne: id=${id}`);
+  private async initialize() {
+    const items = await this.findAll();
+    if (!items.length) {
+      this.logger.log('initialize: seeding database with mock data');
+      await Promise.all(
+        Array.from({ length: 10 }, () =>
+          this.itemModel.create(this.mockItem()),
+        ),
+      );
+    }
+  }
 
-    const item = this.items.find((item) => item.id === id);
+  async findAll(): Promise<ItemEntity[]> {
+    this.logger.log('findAll: querying database');
+    const items = await this.itemModel.find().exec();
+    this.logger.log(`findAll: found ${items.length} items`);
+
+    return items;
+  }
+
+  async findOne(id: string): Promise<ItemEntity> {
+    this.logger.log(`findOne: id=${id}`);
+    const item = await this.itemModel.findOne({ id }).exec();
     if (!item) {
       this.logger.warn(`findOne: not found id=${id}`);
       throw new NotFoundException(`Item ${id} not found`);
@@ -51,23 +63,21 @@ export class ItemsService {
     return item;
   }
 
-  create(dto: CreateItemDto) {
+  async create(dto: CreateItemDto): Promise<ItemEntity> {
     this.logger.log(`create: name=${dto.name}, price=${dto.price}`);
 
-    const item: Item = {
+    const newItem = new this.itemModel({
       id: randomUUID(),
       name: dto.name,
       price: dto.price,
-    };
-    this.items.push(item);
+    });
 
-    return item;
+    return await newItem.save();
   }
 
-  update(id: string, dto: UpdateItemDto): Item {
+  async update(id: string, dto: UpdateItemDto): Promise<ItemEntity> {
     this.logger.log(`update: id=${id}, changes=${JSON.stringify(dto)}`);
 
-    const item = this.findOne(id);
     const cleanDto = Object.fromEntries(
       Object.entries(dto).filter(([, v]) => v != null),
     );
@@ -76,14 +86,24 @@ export class ItemsService {
       throw new BadRequestException('Nothing to update');
     }
 
-    return { ...item, ...cleanDto };
+    const updatedItem = await this.itemModel
+      .findOneAndUpdate({ id }, { $set: cleanDto }, { new: true })
+      .exec();
+
+    if (!updatedItem) {
+      throw new NotFoundException(`Item ${id} not found`);
+    }
+
+    return updatedItem;
   }
 
-  remove(id: string): void {
+  async remove(id: string): Promise<void> {
     this.logger.log(`remove: id=${id}`);
 
-    const item = this.findOne(id);
+    const result = await this.itemModel.deleteOne({ id }).exec();
 
-    this.items = this.items.filter((i) => i.id !== item.id);
+    if (result.deletedCount === 0) {
+      throw new NotFoundException(`Item ${id} not found`);
+    }
   }
 }
