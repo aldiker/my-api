@@ -97,8 +97,8 @@ export class ItemsService {
     return updatedItem;
   }
 
-  async remove(id: string): Promise<void> {
-    this.logger.log(`remove: id=${id}`);
+  async delete(id: string): Promise<void> {
+    this.logger.log(`delete: id=${id}`);
 
     const result = await this.itemModel.deleteOne({ id }).exec();
 

@@ -6,6 +6,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { RequestLoggingInterceptor } from './interceptors/request-logging.interceptor';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ClientModule } from './modules/client/client.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { MongooseModule } from '@nestjs/mongoose';
     }),
     MongooseModule.forRoot(process.env.MONGO_URI as string),
     ItemsModule,
+    ClientModule,
   ],
   controllers: [AppController],
   providers: [

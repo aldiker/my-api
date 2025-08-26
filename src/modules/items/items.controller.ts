@@ -97,7 +97,7 @@ export class ItemsController {
   })
   @ApiOkResponse({ description: 'Item deleted successfully' })
   @ApiNotFoundResponse({ description: 'Item not found' })
-  remove(@Param('id', new ParseUUIDPipe()) id: string): Promise<void> {
-    return this.itemsService.remove(id);
+  delete(@Param('id', new ParseUUIDPipe()) id: string): Promise<void> {
+    return this.itemsService.delete(id);
   }
 }
