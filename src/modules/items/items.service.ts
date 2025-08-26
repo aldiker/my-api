@@ -53,7 +53,7 @@ export class ItemsService {
   }
 
   async findOne(id: string): Promise<ItemEntity> {
-    this.logger.log(`findOne: id=${id}`);
+    this.logger.log(`findOne: id="${id}"`);
     const item = await this.itemModel.findOne({ id }).exec();
     if (!item) {
       this.logger.warn(`findOne: not found id=${id}`);
@@ -64,7 +64,7 @@ export class ItemsService {
   }
 
   async create(dto: CreateItemDto): Promise<ItemEntity> {
-    this.logger.log(`create: name=${dto.name}, price=${dto.price}`);
+    this.logger.log(`create: name="${dto.name}", price="${dto.price}"`);
 
     const newItem = new this.itemModel({
       id: randomUUID(),
@@ -76,7 +76,7 @@ export class ItemsService {
   }
 
   async update(id: string, dto: UpdateItemDto): Promise<ItemEntity> {
-    this.logger.log(`update: id=${id}, changes=${JSON.stringify(dto)}`);
+    this.logger.log(`update: id="${id}", changes=${JSON.stringify(dto)}`);
 
     const cleanDto = Object.fromEntries(
       Object.entries(dto).filter(([, v]) => v != null),
@@ -98,7 +98,7 @@ export class ItemsService {
   }
 
   async delete(id: string): Promise<void> {
-    this.logger.log(`delete: id=${id}`);
+    this.logger.log(`delete: id="${id}"`);
 
     const result = await this.itemModel.deleteOne({ id }).exec();
 

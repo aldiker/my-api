@@ -29,7 +29,7 @@ export class ClientService {
     return firstValueFrom(
       this.itemClient.send<ItemEntity>(
         { cmd: ItemMessagePattern.FIND_ONE },
-        id,
+        { id },
       ),
     );
   }
@@ -37,7 +37,10 @@ export class ClientService {
   async create(dto: CreateItemDto): Promise<ItemEntity> {
     this.logger.log(`Creating item via microservice: ${JSON.stringify(dto)}`);
     return firstValueFrom(
-      this.itemClient.send<ItemEntity>({ cmd: ItemMessagePattern.CREATE }, dto),
+      this.itemClient.send<ItemEntity>(
+        { cmd: ItemMessagePattern.CREATE },
+        { dto },
+      ),
     );
   }
 
@@ -53,10 +56,13 @@ export class ClientService {
     );
   }
 
-  async delete(id: string): Promise<void> {
+  async delete(id: string): Promise<{ success: boolean }> {
     this.logger.log(`Removing item ${id} via microservice`);
     return firstValueFrom(
-      this.itemClient.send<void>({ cmd: ItemMessagePattern.DELETE }, id),
+      this.itemClient.send<{ success: boolean }>(
+        { cmd: ItemMessagePattern.DELETE },
+        { id },
+      ),
     );
   }
 }
