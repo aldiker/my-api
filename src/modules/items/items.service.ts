@@ -41,30 +41,32 @@ export class ItemsService {
           this.itemModel.create(this.mockItem()),
         ),
       );
+      this.logger.log('initialize: seeding completed with 10 items');
     }
   }
 
   async findAll(): Promise<ItemEntity[]> {
-    this.logger.log('findAll: querying database');
-    const items = await this.itemModel.find().exec();
-    this.logger.log(`findAll: found ${items.length} items`);
+    this.logger.debug('findAll: querying database');
+    const items = await this.itemModel.find().lean().exec();
+    this.logger.debug(`findAll: found ${items.length} items`);
 
     return items;
   }
 
   async findOne(id: string): Promise<ItemEntity> {
-    this.logger.log(`findOne: id="${id}"`);
-    const item = await this.itemModel.findOne({ id }).exec();
+    this.logger.debug(`findOne: id="${id}"`);
+    const item = await this.itemModel.findOne({ id }).lean().exec();
     if (!item) {
       this.logger.warn(`findOne: not found id=${id}`);
       throw new NotFoundException(`Item ${id} not found`);
     }
+    this.logger.debug(`findOne: found item=${JSON.stringify(item)}`);
 
     return item;
   }
 
   async create(dto: CreateItemDto): Promise<ItemEntity> {
-    this.logger.log(`create: name="${dto.name}", price="${dto.price}"`);
+    this.logger.debug(`create: name="${dto.name}", price="${dto.price}"`);
 
     const newItem = new this.itemModel({
       id: randomUUID(),
@@ -76,18 +78,20 @@ export class ItemsService {
   }
 
   async update(id: string, dto: UpdateItemDto): Promise<ItemEntity> {
-    this.logger.log(`update: id="${id}", changes=${JSON.stringify(dto)}`);
+    this.logger.debug(`update: id="${id}", changes=${JSON.stringify(dto)}`);
 
     const cleanDto = Object.fromEntries(
       Object.entries(dto).filter(([, v]) => v != null),
     );
 
+    // TODO: Validation !
     if (Object.keys(cleanDto).length === 0) {
       throw new BadRequestException('Nothing to update');
     }
 
     const updatedItem = await this.itemModel
       .findOneAndUpdate({ id }, { $set: cleanDto }, { new: true })
+      .lean()
       .exec();
 
     if (!updatedItem) {
@@ -98,7 +102,7 @@ export class ItemsService {
   }
 
   async delete(id: string): Promise<void> {
-    this.logger.log(`delete: id="${id}"`);
+    this.logger.debug(`delete: id="${id}"`);
 
     const result = await this.itemModel.deleteOne({ id }).exec();
 

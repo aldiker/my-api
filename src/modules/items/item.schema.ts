@@ -23,12 +23,15 @@ export class ItemEntity {
 export type ItemDocument = HydratedDocument<ItemEntity>;
 
 export const ItemSchema = SchemaFactory.createForClass(ItemEntity);
+ItemSchema.set('timestamps', true);
 
-ItemSchema.set('toJSON', {
-  versionKey: false, // removes the __v field
-  transform: (_doc, ret: Record<string, any>) => {
-    delete ret._id; // Remove the _id field (MongoDB adds it automatically)
-    return ret;
-  },
-});
+// We don't use toJSON transformation if we use lean function in services
+// ItemSchema.set('toJSON', {
+//   versionKey: false, // removes the __v field
+//   transform: (_doc, ret: Record<string, any>) => {
+//     delete ret._id; // Remove the _id field (MongoDB adds it automatically)
+//     return ret;
+//   },
+// });
+
 ItemSchema.index({ id: 1 }, { unique: true });

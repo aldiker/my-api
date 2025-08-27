@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -55,6 +54,7 @@ export class ItemsController {
   }
 
   @Post()
+  @HttpCode(201)
   @ApiOperation({ summary: 'Create a new item' })
   @ApiCreatedResponse({ description: 'The created item', type: ItemEntity })
   @ApiBadRequestResponse({ description: 'Validation failed' })
@@ -79,10 +79,6 @@ export class ItemsController {
     @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: UpdateItemDto,
   ): Promise<ItemEntity> {
-    if (Object.keys(dto).length === 0) {
-      throw new BadRequestException('Nothing to update');
-    }
-
     return this.itemsService.update(id, dto);
   }
 
