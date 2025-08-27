@@ -29,6 +29,7 @@ export class ItemsController {
   constructor(private readonly itemsService: ItemsService) {}
 
   @Get()
+  @HttpCode(200)
   @ApiOperation({ summary: 'Get all items' })
   @ApiOkResponse({
     description: 'List of items',
@@ -40,6 +41,7 @@ export class ItemsController {
   }
 
   @Get(':id')
+  @HttpCode(200)
   @ApiOperation({ summary: 'Get item by ID' })
   @ApiParam({
     name: 'id',
@@ -63,6 +65,7 @@ export class ItemsController {
   }
 
   @Patch(':id')
+  @HttpCode(200)
   @ApiOperation({ summary: 'Update an existing item' })
   @ApiParam({
     name: 'id',
